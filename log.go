@@ -104,7 +104,7 @@ var minLogLevel = INFO.Severity
 var logToConsole = true
 var natsConn *nats.Conn
 
-func Setup() (err error) {
+func Setup(fatal bool) (err error) {
 	serviceName = tools.GetEnv("LOG_SERVICE_NAME", "")
 	minLogLevel = tools.GetEnvInt("LOG_LEVEL", INFO.Severity)
 	logToConsole = tools.GetEnvBool("LOG_CONSOLE", true)
@@ -112,7 +112,11 @@ func Setup() (err error) {
 
 	natsConn, err = nats.Connect(natsUrl)
 	if err != nil {
-		log.Fatalf("Can't connect: %v\n", err)
+		if fatal {
+			log.Fatalf("Can't connect: %v\n", err)
+		} else {
+			log.Printf("Can't connect: %v\n", err)
+		}
 	}
 
 	return err
