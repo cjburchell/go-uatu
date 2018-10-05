@@ -175,11 +175,11 @@ func Setup(newSettings Settings) (err error) {
 
 // Message to be sent to centralized logger
 type Message struct {
-	Text        string
-	Level       Level
-	ServiceName string
-	Time        int64
-	Hostname    string
+	Text        string `json:"text"`
+	Level       Level  `json:"level"`
+	ServiceName string `json:"serviceName"`
+	Time        int64  `json:"time"`
+	Hostname    string `json:"hostname"`
 }
 
 func (message Message) String() string {
