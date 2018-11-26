@@ -11,7 +11,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/cjburchell/tools-go/errorex"
+	"github.com/cjburchell/tools-go/trace"
 
 	"github.com/cjburchell/tools-go/env"
 	"github.com/nats-io/go-nats"
@@ -98,7 +98,7 @@ func printErrorLog(err error, msg string, level Level) {
 		}
 		msg += "-----------------------------------------------------------------------------------------------------"
 	} else {
-		msg += errorex.GetStackTrace(2)
+		msg += trace.GetStack(2)
 	}
 
 	printLog(msg, level)
@@ -146,6 +146,8 @@ type Settings struct {
 	RestAddress  string
 	NatsURL      string
 	NatsToken    string
+	NatsUser    string
+	NatsPassword    string
 	MinLogLevel  Level
 	LogToConsole bool
 	UseNats      bool
@@ -163,6 +165,8 @@ func CreateDefaultSettings() Settings {
 	settings.RestAddress = env.Get("LOG_REST_URL", "http://logger:8082/log")
 	settings.NatsURL = env.Get("LOG_NATS_URL", "tcp://nats:4222")
 	settings.NatsToken = env.Get("LOG_NATS_TOKEN", "token")
+	settings.NatsUser = env.Get("LOG_NATS_USER", "admin")
+	settings.NatsPassword = env.Get("LOG_NATS_PASSWORD", "password")
 
 	return settings
 }
@@ -173,7 +177,10 @@ var settings Settings
 func Setup(newSettings Settings) (err error) {
 	settings = newSettings
 	if settings.UseNats {
-		natsConn, err = nats.Connect(settings.NatsURL)
+		natsConn, err = nats.Connect(
+			settings.NatsURL,
+			nats.Token(newSettings.NatsToken),
+			nats.UserInfo(newSettings.NatsUser, newSettings.NatsPassword))
 		if err != nil {
 			log.Printf("Can't connect: %v\n", err)
 		}
