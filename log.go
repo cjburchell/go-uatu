@@ -45,6 +45,7 @@ var levels = []Level{DEBUG,
 	FATAL,
 }
 
+// GetLogLevel gets the log level for input text
 func GetLogLevel(levelText string) Level {
 	for i := range levels {
 		if levels[i].Text == levelText {
