@@ -146,8 +146,8 @@ type Settings struct {
 	RestAddress  string
 	NatsURL      string
 	NatsToken    string
-	NatsUser    string
-	NatsPassword    string
+	NatsUser     string
+	NatsPassword string
 	MinLogLevel  Level
 	LogToConsole bool
 	UseNats      bool
@@ -180,7 +180,16 @@ func Setup(newSettings Settings) (err error) {
 		natsConn, err = nats.Connect(
 			settings.NatsURL,
 			nats.Token(newSettings.NatsToken),
-			nats.UserInfo(newSettings.NatsUser, newSettings.NatsPassword))
+			nats.UserInfo(newSettings.NatsUser, newSettings.NatsPassword),
+			nats.DisconnectHandler(func(nc *nats.Conn) {
+				log.Printf("Logger got disconnected\n")
+			}),
+			nats.ReconnectHandler(func(nc *nats.Conn) {
+				log.Printf("Logger reconnected to %v\n", nc.ConnectedUrl())
+			}),
+			nats.ClosedHandler(func(nc *nats.Conn) {
+				log.Printf("Logger connection closed. Reason: %q\n", nc.LastError())
+			}))
 		if err != nil {
 			log.Printf("Can't connect: %v\n", err)
 		}
