@@ -1,7 +1,7 @@
 pipeline{
     agent any
     environment {
-            PROJECT_PATH = "/go/src/github.com/cjburchell/yasls-client-go"
+            PROJECT_PATH = "/go/src/github.com/cjburchell/go-uatu"
     }
 
     stages{
