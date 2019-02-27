@@ -1,20 +1,15 @@
 package log
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	"github.com/pkg/errors"
 
 	"github.com/cjburchell/tools-go/trace"
-
-	"github.com/cjburchell/tools-go/env"
-	"github.com/nats-io/go-nats"
 )
 
 // Level of the log
@@ -137,70 +132,31 @@ func Printf(format string, v ...interface{}) {
 }
 
 var hostname, _ = os.Hostname()
-var natsConn *nats.Conn
-var restClient *http.Client
+
+type Publisher interface {
+	Publish(messageBites []byte) error
+}
+
+//var natsConn *nats.Conn
+//var restClient *http.Client
 
 // Settings for sending logs
 type Settings struct {
 	ServiceName  string
-	RestAddress  string
-	RestToken    string
-	NatsURL      string
-	NatsToken    string
-	NatsUser     string
-	NatsPassword string
 	MinLogLevel  Level
 	LogToConsole bool
-	UseNats      bool
-	UseRest      bool
 }
 
-// CreateDefaultSettings creates a default settings object
-func CreateDefaultSettings() Settings {
-	var settings Settings
-	settings.ServiceName = env.Get("LOG_SERVICE_NAME", "")
-	settings.MinLogLevel = GetLogLevel(env.Get("LOG_LEVEL", INFO.Text))
-	settings.LogToConsole = env.GetBool("LOG_CONSOLE", true)
-	settings.UseNats = env.GetBool("LOG_USE_NATS", true)
-	settings.UseRest = env.GetBool("LOG_USE_REST", false)
-	settings.RestAddress = env.Get("LOG_REST_URL", "http://logger:8082/log")
-	settings.RestToken = env.Get("LOG_REST_TOKEN", "token")
-	settings.NatsURL = env.Get("LOG_NATS_URL", "tcp://nats:4222")
-	settings.NatsToken = env.Get("LOG_NATS_TOKEN", "token")
-	settings.NatsUser = env.Get("LOG_NATS_USER", "admin")
-	settings.NatsPassword = env.Get("LOG_NATS_PASSWORD", "password")
-
-	return settings
+var settings = Settings{
+	MinLogLevel:  DEBUG,
+	LogToConsole: true,
 }
-
-var settings Settings
+var publishers []Publisher
 
 // Setup the logging system
-func Setup(newSettings Settings) (err error) {
+func Setup(newSettings Settings, newPublishers []Publisher) (err error) {
 	settings = newSettings
-	if settings.UseNats {
-		natsConn, err = nats.Connect(
-			settings.NatsURL,
-			nats.Token(newSettings.NatsToken),
-			nats.UserInfo(newSettings.NatsUser, newSettings.NatsPassword),
-			nats.DisconnectHandler(func(nc *nats.Conn) {
-				log.Printf("Logger got disconnected\n")
-			}),
-			nats.ReconnectHandler(func(nc *nats.Conn) {
-				log.Printf("Logger reconnected to %v\n", nc.ConnectedUrl())
-			}),
-			nats.ClosedHandler(func(nc *nats.Conn) {
-				log.Printf("Logger connection closed. Reason: %q\n", nc.LastError())
-			}))
-		if err != nil {
-			log.Printf("Can't connect: %v\n", err)
-		}
-	}
-
-	if settings.UseRest {
-		restClient = &http.Client{}
-	}
-
+	publishers = newPublishers
 	return err
 }
 
@@ -230,33 +186,20 @@ func printLog(text string, level Level) {
 		fmt.Println(message.String())
 	}
 
+	if publishers == nil {
+		return
+	}
+
 	messageBites, err := json.Marshal(message)
 	if err != nil {
 		fmt.Println("error:", err)
 	}
-	if natsConn != nil {
-		err = natsConn.Publish("logs", messageBites)
+
+	for _, publisher := range publishers {
+		err = publisher.Publish(messageBites)
 		if err != nil {
-			fmt.Printf("Unable to send log to nats (%s): %s", err.Error(), message.String())
+			fmt.Printf("Unable to send log to publisher (%s): %s", err.Error(), message.String())
 		}
 	}
 
-	if restClient != nil {
-		req, err := http.NewRequest("POST", settings.RestAddress, bytes.NewBuffer(messageBites))
-		if err != nil {
-			fmt.Printf("Unable to send log to %s(%s): %s", settings.RestAddress, err.Error(), message.String())
-		}
-
-		req.Header.Add("Authorization", fmt.Sprintf("APIKEY %s", settings.RestToken))
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := restClient.Do(req)
-		if err != nil {
-			fmt.Printf("Unable to send log to %s(%s): %s", settings.RestAddress, err.Error(), message.String())
-		}
-
-		if resp.StatusCode != http.StatusCreated {
-			fmt.Printf("Unable to send log to %s(%d): %s", settings.RestAddress, resp.StatusCode, message.String())
-		}
-	}
 }
