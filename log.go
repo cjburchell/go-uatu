@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -170,7 +171,7 @@ type Message struct {
 }
 
 func (message Message) String() string {
-	return fmt.Sprintf("[%s] %d %s - %s", message.Level.Text, message.Time, message.ServiceName, message.Text)
+	return fmt.Sprintf("[%s] %s %s - %s", message.Level.Text, time.Unix(message.Time/1000, 0).Format("2006-01-02 15:04:05 MST"), message.ServiceName, message.Text)
 }
 
 func printLog(text string, level Level) {
@@ -183,7 +184,11 @@ func printLog(text string, level Level) {
 	}
 
 	if level.Severity >= settings.MinLogLevel.Severity && settings.LogToConsole {
-		fmt.Println(message.String())
+		if strings.HasSuffix(message.String(), "\n") {
+			fmt.Print(message.String())
+		} else {
+			fmt.Println(message.String())
+		}
 	}
 
 	if publishers == nil {
@@ -202,4 +207,13 @@ func printLog(text string, level Level) {
 		}
 	}
 
+}
+
+type Writer struct {
+	Level Level
+}
+
+func (w Writer) Write(p []byte) (n int, err error) {
+	printLog(string(p), w.Level)
+	return len(p), nil
 }

@@ -28,7 +28,7 @@ func createNatsSettings() publishers.NatsSettings {
 		User:     env.Get("LOG_NATS_USER", "admin"),
 		Password: env.Get("LOG_NATS_PASSWORD", "password"),
 	}
-}2
+}
 
 func SetupLogger() error {
 	newPublishers := make([]log.Publisher, 0)
