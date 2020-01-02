@@ -1,7 +1,8 @@
 package publishers
 
 import (
-	"github.com/cjburchell/go-uatu"
+	"log"
+
 	"github.com/nats-io/go-nats"
 )
 
@@ -20,7 +21,7 @@ func (publisher natsPublisher) Publish(messageBites []byte) error {
 	return publisher.natsConn.Publish("logs", messageBites)
 }
 
-func SetupNats(newSettings NatsSettings) log.Publisher {
+func SetupNats(newSettings NatsSettings) Publisher {
 	natsConn, err := nats.Connect(
 		newSettings.URL,
 		nats.Token(newSettings.Token),

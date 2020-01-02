@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/http"
-
-	"github.com/cjburchell/go-uatu"
 )
 
 type HttpSettings struct {
@@ -39,7 +37,7 @@ func (publisher httpPublisher) Publish(messageBites []byte) error {
 	return nil
 }
 
-func SetupHttp(newSettings HttpSettings) log.Publisher {
+func SetupHttp(newSettings HttpSettings) Publisher {
 	restClient := &http.Client{}
 	return httpPublisher{restClient: restClient, settings: newSettings}
 }

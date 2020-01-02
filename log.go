@@ -3,10 +3,14 @@ package log
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/cjburchell/go-uatu/publishers"
+	"github.com/cjburchell/tools-go/env"
 
 	"github.com/pkg/errors"
 
@@ -34,15 +38,88 @@ var (
 	FATAL = Level{Text: "Fatal", Severity: 4}
 )
 
-var levels = []Level{DEBUG,
-	INFO,
-	WARNING,
-	ERROR,
-	FATAL,
+type ILog interface {
+	Warnf(format string, v ...interface{})
+	Warn(v ...interface{})
+	Error(err error, v ...interface{})
+	Errorf(err error, format string, v ...interface{})
+	Fatal(err error, v ...interface{})
+	Fatalf(err error, format string, v ...interface{})
+	Debug(v ...interface{})
+	Debugf(format string, v ...interface{})
+	Print(v ...interface{})
+	Printf(format string, v ...interface{})
+	GetWriter(level Level) io.Writer
+}
+
+type logger struct {
+	publishers []publishers.Publisher
+	settings   Settings
+	hostname   string
+}
+
+var settings = Settings{
+	MinLogLevel:  DEBUG,
+	LogToConsole: true,
+}
+
+func createSettings() Settings {
+	return Settings{
+		ServiceName:  env.Get("LOG_SERVICE_NAME", ""),
+		MinLogLevel:  GetLogLevel(env.Get("LOG_LEVEL", INFO.Text)),
+		LogToConsole: env.GetBool("LOG_CONSOLE", true),
+	}
+}
+
+func createHttpSettings() publishers.HttpSettings {
+	return publishers.HttpSettings{
+		Address: env.Get("LOG_REST_URL", "http://logger:8082/log"),
+		Token:   env.Get("LOG_REST_TOKEN", "token"),
+	}
+}
+
+func createNatsSettings() publishers.NatsSettings {
+	return publishers.NatsSettings{
+		URL:      env.Get("LOG_NATS_URL", "tcp://nats:4222"),
+		Token:    env.Get("LOG_NATS_TOKEN", "token"),
+		User:     env.Get("LOG_NATS_USER", "admin"),
+		Password: env.Get("LOG_NATS_PASSWORD", "password"),
+	}
+}
+
+func Create() ILog {
+	var hostname, _ = os.Hostname()
+
+	l := logger{
+		settings: createSettings(),
+		hostname: hostname,
+	}
+
+	newPublishers := make([]publishers.Publisher, 0)
+	if env.GetBool("LOG_USE_NATS", true) {
+		publisher := publishers.SetupNats(createNatsSettings())
+		newPublishers = append(newPublishers, publisher)
+	}
+
+	if env.GetBool("LOG_USE_REST", false) {
+		publisher := publishers.SetupHttp(createHttpSettings())
+		newPublishers = append(newPublishers, publisher)
+	}
+
+	l.publishers = newPublishers
+
+	return l
 }
 
 // GetLogLevel gets the log level for input text
 func GetLogLevel(levelText string) Level {
+	var levels = []Level{DEBUG,
+		INFO,
+		WARNING,
+		ERROR,
+		FATAL,
+	}
+
 	for i := range levels {
 		if levels[i].Text == levelText {
 			return levels[i]
@@ -53,32 +130,33 @@ func GetLogLevel(levelText string) Level {
 }
 
 // Warnf Print a formatted warning level message
-func Warnf(format string, v ...interface{}) {
-	printLog(fmt.Sprintf(format, v...), WARNING)
+func (l logger) Warnf(format string, v ...interface{}) {
+	l.printLog(fmt.Sprintf(format, v...), WARNING)
 }
 
 // Warn Print a warning message
-func Warn(v ...interface{}) {
-	printLog(fmt.Sprint(v...), WARNING)
+func (l logger) Warn(v ...interface{}) {
+	l.printLog(fmt.Sprint(v...), WARNING)
 }
 
 // Error Print a error level message
-func Error(err error, v ...interface{}) {
-	printErrorLog(err, fmt.Sprint(v...), ERROR)
+func (l logger) Error(err error, v ...interface{}) {
+	l.printErrorLog(err, fmt.Sprint(v...), ERROR)
 }
 
 // Errorf Print a formatted error level message
-func Errorf(err error, format string, v ...interface{}) {
-	printErrorLog(err, fmt.Sprintf(format, v...), ERROR)
+func (l logger) Errorf(err error, format string, v ...interface{}) {
+	l.printErrorLog(err, fmt.Sprintf(format, v...), ERROR)
 }
 
 type stackTracer interface {
 	StackTrace() errors.StackTrace
 }
 
-func printErrorLog(err error, msg string, level Level) {
+func (l logger) printErrorLog(err error, msg string, level Level) {
 	if err == nil {
-		printLog(msg, level)
+		l.printLog(msg, level)
+		return
 	}
 
 	if msg == "" {
@@ -97,68 +175,46 @@ func printErrorLog(err error, msg string, level Level) {
 		msg += trace.GetStack(2)
 	}
 
-	printLog(msg, level)
+	l.printLog(msg, level)
 }
 
 // Fatal print fatal level message
-func Fatal(err error, v ...interface{}) {
-	printErrorLog(err, fmt.Sprint(v...), FATAL)
+func (l logger) Fatal(err error, v ...interface{}) {
+	l.printErrorLog(err, fmt.Sprint(v...), FATAL)
 	log.Panic(v...)
 }
 
 // Fatalf print formatted fatal level message
-func Fatalf(err error, format string, v ...interface{}) {
-	printErrorLog(err, fmt.Sprintf(format, v...), FATAL)
+func (l logger) Fatalf(err error, format string, v ...interface{}) {
+	l.printErrorLog(err, fmt.Sprintf(format, v...), FATAL)
 	log.Panicf(format, v...)
 }
 
 // Debug print debug level message
-func Debug(v ...interface{}) {
-	printLog(fmt.Sprint(v...), DEBUG)
+func (l logger) Debug(v ...interface{}) {
+	l.printLog(fmt.Sprint(v...), DEBUG)
 }
 
 // Debugf print formatted debug level  message
-func Debugf(format string, v ...interface{}) {
-	printLog(fmt.Sprintf(format, v...), DEBUG)
+func (l logger) Debugf(format string, v ...interface{}) {
+	l.printLog(fmt.Sprintf(format, v...), DEBUG)
 }
 
 // Print print info level message
-func Print(v ...interface{}) {
-	printLog(fmt.Sprint(v...), INFO)
+func (l logger) Print(v ...interface{}) {
+	l.printLog(fmt.Sprint(v...), INFO)
 }
 
 // Printf print info level message
-func Printf(format string, v ...interface{}) {
-	printLog(fmt.Sprintf(format, v...), INFO)
+func (l logger) Printf(format string, v ...interface{}) {
+	l.printLog(fmt.Sprintf(format, v...), INFO)
 }
-
-var hostname, _ = os.Hostname()
-
-type Publisher interface {
-	Publish(messageBites []byte) error
-}
-
-//var natsConn *nats.Conn
-//var restClient *http.Client
 
 // Settings for sending logs
 type Settings struct {
 	ServiceName  string
 	MinLogLevel  Level
 	LogToConsole bool
-}
-
-var settings = Settings{
-	MinLogLevel:  DEBUG,
-	LogToConsole: true,
-}
-var publishers []Publisher
-
-// Setup the logging system
-func Setup(newSettings Settings, newPublishers []Publisher) (err error) {
-	settings = newSettings
-	publishers = newPublishers
-	return err
 }
 
 // Message to be sent to centralized logger
@@ -174,13 +230,13 @@ func (message Message) String() string {
 	return fmt.Sprintf("[%s] %s %s - %s", message.Level.Text, time.Unix(message.Time/1000, 0).Format("2006-01-02 15:04:05 MST"), message.ServiceName, message.Text)
 }
 
-func printLog(text string, level Level) {
+func (l logger) printLog(text string, level Level) {
 	message := Message{
 		Text:        text,
 		Level:       level,
 		ServiceName: settings.ServiceName,
 		Time:        time.Now().UnixNano() / 1000000,
-		Hostname:    hostname,
+		Hostname:    l.hostname,
 	}
 
 	if level.Severity >= settings.MinLogLevel.Severity && settings.LogToConsole {
@@ -191,7 +247,7 @@ func printLog(text string, level Level) {
 		}
 	}
 
-	if publishers == nil {
+	if l.publishers == nil {
 		return
 	}
 
@@ -200,7 +256,7 @@ func printLog(text string, level Level) {
 		fmt.Println("error:", err)
 	}
 
-	for _, publisher := range publishers {
+	for _, publisher := range l.publishers {
 		err = publisher.Publish(messageBites)
 		if err != nil {
 			fmt.Printf("Unable to send log to publisher (%s): %s", err.Error(), message.String())
@@ -209,11 +265,16 @@ func printLog(text string, level Level) {
 
 }
 
+func (l logger) GetWriter(level Level) io.Writer {
+	return Writer{level, l}
+}
+
 type Writer struct {
-	Level Level
+	Level  Level
+	logger logger
 }
 
 func (w Writer) Write(p []byte) (n int, err error) {
-	printLog(string(p), w.Level)
+	w.logger.printLog(string(p), w.Level)
 	return len(p), nil
 }
