@@ -31,12 +31,10 @@ pipeline{
                                 sh """go get github.com/nats-io/go-nats"""
                                 sh """go get github.com/pkg/errors"""
 
-                                sh """go vet ./... || true"""
+                                sh """go vet ${paths}"""
 
                                 def checkVet = scanForIssues tool: [$class: 'GoVet']
                                 publishIssues issues:[checkVet]
-
-                                // warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                         }
                     }
                 }
@@ -60,7 +58,6 @@ pipeline{
 
                             def checkLint = scanForIssues tool: [$class: 'GoLint']
                             publishIssues issues:[checkLint]
-                            // warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                         }
                     }
                 }
