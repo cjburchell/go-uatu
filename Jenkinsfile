@@ -30,8 +30,8 @@ pipeline{
                         sh """go get github.com/nats-io/go-nats"""
                         sh """go get github.com/pkg/errors"""
 
-                        sh """go vet ${paths}"""
-                        sh """golint ${paths}"""
+                        sh """go vet ${paths} || true"""
+                        sh """golint ${paths} || true"""
 
                         warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                 }
