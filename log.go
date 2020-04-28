@@ -10,11 +10,10 @@ import (
 	"time"
 
 	"github.com/cjburchell/go-uatu/publishers"
-	"github.com/cjburchell/tools-go/env"
+	"github.com/cjburchell/go-uatu/tools/env"
+	"github.com/cjburchell/go-uatu/tools/trace"
 
 	"github.com/pkg/errors"
-
-	"github.com/cjburchell/tools-go/trace"
 )
 
 // Level of the log
