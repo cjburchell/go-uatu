@@ -33,8 +33,8 @@ pipeline{
 
                                 sh """go vet ./... || true"""
 
-                                def checkvet = scanForIssues tool: [$class: 'Go Vet']
-                                publishIssues issues:[checkvet]
+                                def checkVet = scanForIssues tool: [$class: 'GoVet']
+                                publishIssues issues:[checkVet]
 
                                 // warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                         }
@@ -58,8 +58,8 @@ pipeline{
 
                             sh """golint ${paths}"""
 
-                            def checkvet = scanForIssues tool: [$class: 'Go Lint']
-                            publishIssues issues:[checkvet]
+                            def checkLint = scanForIssues tool: [$class: 'GoLint']
+                            publishIssues issues:[checkLint]
                             // warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                         }
                     }
