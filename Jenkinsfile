@@ -25,8 +25,8 @@ pipeline{
                     }
                     steps {
                         script{
-                                //sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
-                                //def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
+                                sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
+                                def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
                                 sh """go get github.com/nats-io/go-nats"""
                                 sh """go get github.com/pkg/errors"""
