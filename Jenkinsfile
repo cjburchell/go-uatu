@@ -35,7 +35,7 @@ pipeline{
                         def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
                         sh """echo ${paths}"""
 
-                        sh """go tool vet ${paths}"""
+                        sh """go vet ${paths}"""
                         sh """golint ${paths}"""
 
                         warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
