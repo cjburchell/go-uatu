@@ -31,9 +31,12 @@ pipeline{
                                 sh """go get github.com/nats-io/go-nats"""
                                 sh """go get github.com/pkg/errors"""
 
-                                sh """go vet ./..."""
+                                sh """go vet ./... || true"""
 
-                                warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                                def checkvet = scanForIssues tool: [$class: 'Go Vet']
+                                publishIssues issues:[checkvet]
+
+                                // warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                         }
                     }
                 }
@@ -55,7 +58,9 @@ pipeline{
 
                             sh """golint ${paths}"""
 
-                            warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                            def checkvet = scanForIssues tool: [$class: 'Go Lint']
+                            publishIssues issues:[checkvet]
+                            // warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                         }
                     }
                 }
