@@ -18,15 +18,16 @@ pipeline{
         stage('Lint') {
 			agent {
 				docker { 
-					image 'cjburchell/goci:latest' 
+					image 'cjburchell/goci:1.13'
 					args '-v $WORKSPACE:$PROJECT_PATH'
 				}
 			}
             steps {
-                script{
 				    sh """go version"""
 				    sh """printenv"""
 				    sh """cd ${PROJECT_PATH} && ls"""
+				    sh """stat /tmp || true"""
+				    sh """cd /tmp && ls || true"""
 					sh """stat /tmp/.cache || true"""
 					sh """cd ${PROJECT_PATH} && go list ./..."""
                     sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
@@ -37,7 +38,6 @@ pipeline{
                     sh """golint ${paths}"""
 
                     warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
-                }
             }
         }
     }
