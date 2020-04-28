@@ -19,7 +19,7 @@ pipeline{
 			agent {
 				docker { 
 					image 'cjburchell/goci:latest' 
-					args '-v ${env.WORKSPACE}:${env.PROJECT_PATH}'
+					args '-v $WORKSPACE:$PROJECT_PATH'
 				}
 			}
             steps {
