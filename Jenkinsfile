@@ -1,5 +1,4 @@
 pipeline{
-    agent any
     environment {
             PROJECT_PATH = "/go/src/github.com/cjburchell/go-uatu"
     }
@@ -16,23 +15,24 @@ pipeline{
          }
 
         stage('Lint') {
+			agent {
+				docker { 
+					image 'cjburchell/goci:latest' 
+					args '-v $WORKSPACE:$PROJECT_PATH'
+				}
+			}
             steps {
                 script{
-                docker.withRegistry('', 'dockerhub') {
-                        docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
-						    sh """printenv"""
-							sh """whoami"""
-						    sh """cd ${PROJECT_PATH} && ls"""
-							sh """stat /tmp/.cache"""
-                            sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
-                            def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
+				    sh """printenv"""
+				    sh """cd ${PROJECT_PATH} && ls"""
+					sh """stat /tmp/.cache"""
+                    sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
+                    def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
-                            sh """go tool vet ${paths}"""
-                            sh """golint ${paths}"""
+                    sh """go tool vet ${paths}"""
+                    sh """golint ${paths}"""
 
-                            warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
-                        }
-                    }
+                    warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
                 }
             }
         }
