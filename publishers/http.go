@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"net/http"
 )
-
-type HttpSettings struct {
+// HTTP Settings
+type HTTPSettings struct {
 	Address string
 	Token   string
 }
 
 type httpPublisher struct {
 	restClient *http.Client
-	settings   HttpSettings
+	settings   HTTPSettings
 }
 
 func (publisher httpPublisher) Publish(messageBites []byte) error {
@@ -31,13 +31,13 @@ func (publisher httpPublisher) Publish(messageBites []byte) error {
 	}
 
 	if resp.StatusCode != http.StatusCreated {
-		return fmt.Errorf("Unable to send log to %s(%d)", publisher.settings.Address, resp.StatusCode)
+		return fmt.Errorf("unable to send log to %s(%d)", publisher.settings.Address, resp.StatusCode)
 	}
 
 	return nil
 }
-
-func SetupHttp(newSettings HttpSettings) Publisher {
+// Setup HTTP
+func SetupHTTP(newSettings HTTPSettings) Publisher {
 	restClient := &http.Client{}
 	return httpPublisher{restClient: restClient, settings: newSettings}
 }

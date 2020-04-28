@@ -38,6 +38,7 @@ var (
 	FATAL = Level{Text: "Fatal", Severity: 4}
 )
 
+// Log interface
 type ILog interface {
 	Warnf(format string, v ...interface{})
 	Warn(v ...interface{})
@@ -71,8 +72,8 @@ func createSettings() Settings {
 	}
 }
 
-func createHttpSettings() publishers.HttpSettings {
-	return publishers.HttpSettings{
+func createHTTPSettings() publishers.HTTPSettings {
+	return publishers.HTTPSettings{
 		Address: env.Get("LOG_REST_URL", "http://logger:8082/log"),
 		Token:   env.Get("LOG_REST_TOKEN", "token"),
 	}
@@ -87,6 +88,7 @@ func createNatsSettings() publishers.NatsSettings {
 	}
 }
 
+// Creates the logger
 func Create() ILog {
 	var hostname, _ = os.Hostname()
 
@@ -102,7 +104,7 @@ func Create() ILog {
 	}
 
 	if env.GetBool("LOG_USE_REST", false) {
-		publisher := publishers.SetupHttp(createHttpSettings())
+		publisher := publishers.SetupHTTP(createHTTPSettings())
 		newPublishers = append(newPublishers, publisher)
 	}
 
@@ -269,6 +271,7 @@ func (l logger) GetWriter(level Level) io.Writer {
 	return Writer{level, l}
 }
 
+// Log Writer
 type Writer struct {
 	Level  Level
 	logger logger
