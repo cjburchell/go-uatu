@@ -28,6 +28,7 @@ pipeline{
                         def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
                         sh """go get github.com/nats-io/go-nats"""
+                        sh """go get github.com/pkg/errors"""
 
                         sh """go vet ${paths}"""
                         sh """golint ${paths}"""
