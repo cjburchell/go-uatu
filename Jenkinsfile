@@ -24,19 +24,10 @@ pipeline{
 			}
             steps {
                 script{
-                        sh """go version"""
-                        sh """printenv"""
-                        sh """cd ${PROJECT_PATH} && ls"""
-                        sh """stat /tmp || true"""
-                        sh """cd /tmp && ls || true"""
-                        sh """stat /tmp/.cache || true"""
-                        sh """cd ${PROJECT_PATH} && go list ./..."""
                         sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                         def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
-                        sh """echo ${paths}"""
 
                         sh """go get github.com/nats-io/go-nats"""
-                        sh """go get github.com/cjburchell/tools-go"""
 
                         sh """go vet ${paths}"""
                         sh """golint ${paths}"""
