@@ -20,6 +20,10 @@ pipeline{
                 script{
                 docker.withRegistry('', 'dockerhub') {
                         docker.image('cjburchell/goci:latest').inside("-v ${env.WORKSPACE}:${PROJECT_PATH}"){
+						    sh """printenv"""
+							sh """whoami"""
+						    sh """cd ${PROJECT_PATH} && ls"""
+							sh """stat /tmp/.cache"""
                             sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                             def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
