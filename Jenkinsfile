@@ -4,7 +4,7 @@ pipeline{
             PROJECT_PATH = "/go/src/github.com/cjburchell/go-uatu"
     }
 
-    stages{
+    stages {
         stage('Setup') {
             steps {
                 script{
@@ -23,21 +23,23 @@ pipeline{
 				}
 			}
             steps {
-				    sh """go version"""
-				    sh """printenv"""
-				    sh """cd ${PROJECT_PATH} && ls"""
-				    sh """stat /tmp || true"""
-				    sh """cd /tmp && ls || true"""
-					sh """stat /tmp/.cache || true"""
-					sh """cd ${PROJECT_PATH} && go list ./..."""
-                    sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
-                    def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
-					sh """echo ${paths}"""
+                script{
+                        sh """go version"""
+                        sh """printenv"""
+                        sh """cd ${PROJECT_PATH} && ls"""
+                        sh """stat /tmp || true"""
+                        sh """cd /tmp && ls || true"""
+                        sh """stat /tmp/.cache || true"""
+                        sh """cd ${PROJECT_PATH} && go list ./..."""
+                        sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
+                        def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
+                        sh """echo ${paths}"""
 
-                    sh """go tool vet ${paths}"""
-                    sh """golint ${paths}"""
+                        sh """go tool vet ${paths}"""
+                        sh """golint ${paths}"""
 
-                    warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                        warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet'], [parserName: 'Go Lint']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                }
             }
         }
     }
@@ -60,5 +62,4 @@ pipeline{
               }
         }
     }
-
 }
