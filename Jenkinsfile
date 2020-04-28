@@ -14,50 +14,51 @@ pipeline{
              checkout scm
              }
          }
+        parallel {
+            stage('Vet') {
+                agent {
+                    docker {
+                        image 'cjburchell/goci:1.13'
+                        args '-v $WORKSPACE:$PROJECT_PATH'
+                    }
+                }
+                steps {
+                    script{
+                            //sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
+                            //def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
-        stage('Vet') {
-			agent {
-				docker { 
-					image 'cjburchell/goci:1.13'
-					args '-v $WORKSPACE:$PROJECT_PATH'
-				}
-			}
-            steps {
-                script{
+                            sh """go get github.com/nats-io/go-nats"""
+                            sh """go get github.com/pkg/errors"""
+
+                            sh """go vet ./..."""
+
+                            warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                    }
+                }
+            }
+
+            stage('Lint') {
+                agent {
+                    docker {
+                        image 'cjburchell/goci:1.13'
+                        args '-v $WORKSPACE:$PROJECT_PATH'
+                    }
+                }
+                steps {
+                    script{
                         sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
                         def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
 
                         sh """go get github.com/nats-io/go-nats"""
                         sh """go get github.com/pkg/errors"""
 
-                        sh """go vet ${paths}"""
+                        sh """golint ${paths}"""
 
                         warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
+                    }
                 }
             }
         }
-
-        stage('Lint') {
-        			agent {
-        				docker {
-        					image 'cjburchell/goci:1.13'
-        					args '-v $WORKSPACE:$PROJECT_PATH'
-        				}
-        			}
-                    steps {
-                        script{
-                                sh """cd ${PROJECT_PATH} && go list ./... | grep -v /vendor/ > projectPaths"""
-                                def paths = sh returnStdout: true, script:"""awk '{printf "/go/src/%s ",\$0} END {print ""}' projectPaths"""
-
-                                sh """go get github.com/nats-io/go-nats"""
-                                sh """go get github.com/pkg/errors"""
-
-                                sh """golint ${paths}"""
-
-                                warnings canComputeNew: true, canResolveRelativePaths: true, categoriesPattern: '', consoleParsers: [[parserName: 'Go Vet']], defaultEncoding: '', excludePattern: '', healthy: '', includePattern: '', messagesPattern: '', unHealthy: ''
-                        }
-                    }
-                }
     }
 
     post {
