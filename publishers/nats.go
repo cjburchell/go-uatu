@@ -6,6 +6,7 @@ import (
 	"github.com/nats-io/go-nats"
 )
 
+// Nats Settings
 type NatsSettings struct {
 	URL      string
 	Token    string
@@ -17,10 +18,12 @@ type natsPublisher struct {
 	natsConn *nats.Conn
 }
 
+// Publish message
 func (publisher natsPublisher) Publish(messageBites []byte) error {
 	return publisher.natsConn.Publish("logs", messageBites)
 }
 
+// Setup Nats
 func SetupNats(newSettings NatsSettings) Publisher {
 	natsConn, err := nats.Connect(
 		newSettings.URL,
