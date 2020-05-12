@@ -3,7 +3,6 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cjburchell/tools-go/env"
 	"github.com/cjburchell/tools-go/trace"
 	"io"
 	"log"
@@ -52,6 +51,11 @@ type ILog interface {
 	GetWriter(level Level) io.Writer
 }
 
+type ISettings interface {
+	Get(key string, fallback string) string
+	GetBool(key string, fallback bool) bool
+}
+
 type logger struct {
 	publishers []publishers.Publisher
 	settings   Settings
@@ -63,47 +67,47 @@ var settings = Settings{
 	LogToConsole: true,
 }
 
-func createSettings() Settings {
+func createSettings(settings ISettings) Settings {
 	return Settings{
-		ServiceName:  env.Get("LOG_SERVICE_NAME", ""),
-		MinLogLevel:  GetLogLevel(env.Get("LOG_LEVEL", INFO.Text)),
-		LogToConsole: env.GetBool("LOG_CONSOLE", true),
+		ServiceName:  settings.Get("LOG_SERVICE_NAME", ""),
+		MinLogLevel:  GetLogLevel(settings.Get("LOG_LEVEL", INFO.Text)),
+		LogToConsole: settings.GetBool("LOG_CONSOLE", true),
 	}
 }
 
-func createHTTPSettings() publishers.HTTPSettings {
+func createHTTPSettings(settings ISettings) publishers.HTTPSettings {
 	return publishers.HTTPSettings{
-		Address: env.Get("LOG_REST_URL", "http://logger:8082/log"),
-		Token:   env.Get("LOG_REST_TOKEN", "token"),
+		Address: settings.Get("LOG_REST_URL", "http://logger:8082/log"),
+		Token:   settings.Get("LOG_REST_TOKEN", "token"),
 	}
 }
 
-func createNatsSettings() publishers.NatsSettings {
+func createNatsSettings(settings ISettings) publishers.NatsSettings {
 	return publishers.NatsSettings{
-		URL:      env.Get("LOG_NATS_URL", "tcp://nats:4222"),
-		Token:    env.Get("LOG_NATS_TOKEN", "token"),
-		User:     env.Get("LOG_NATS_USER", "admin"),
-		Password: env.Get("LOG_NATS_PASSWORD", "password"),
+		URL:      settings.Get("LOG_NATS_URL", "tcp://nats:4222"),
+		Token:    settings.Get("LOG_NATS_TOKEN", "token"),
+		User:     settings.Get("LOG_NATS_USER", "admin"),
+		Password: settings.Get("LOG_NATS_PASSWORD", "password"),
 	}
 }
 
 // Creates the logger
-func Create() ILog {
+func Create(settings ISettings) ILog {
 	var hostname, _ = os.Hostname()
 
 	l := logger{
-		settings: createSettings(),
+		settings: createSettings(settings),
 		hostname: hostname,
 	}
 
 	newPublishers := make([]publishers.Publisher, 0)
-	if env.GetBool("LOG_USE_NATS", true) {
-		publisher := publishers.SetupNats(createNatsSettings())
+	if settings.GetBool("LOG_USE_NATS", true) {
+		publisher := publishers.SetupNats(createNatsSettings(settings))
 		newPublishers = append(newPublishers, publisher)
 	}
 
-	if env.GetBool("LOG_USE_REST", false) {
-		publisher := publishers.SetupHTTP(createHTTPSettings())
+	if settings.GetBool("LOG_USE_REST", false) {
+		publisher := publishers.SetupHTTP(createHTTPSettings(settings))
 		newPublishers = append(newPublishers, publisher)
 	}
 
