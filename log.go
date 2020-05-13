@@ -3,16 +3,14 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cjburchell/tools-go/trace"
+	"github.com/cjburchell/uatu-go/publishers"
+	"github.com/cjburchell/uatu-go/trace"
+	"github.com/pkg/errors"
 	"io"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/cjburchell/uatu-go/publishers"
-
-	"github.com/pkg/errors"
 )
 
 // Level of the log
