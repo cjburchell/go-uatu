@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cjburchell/uatu-go/publishers"
-	"github.com/cjburchell/uatu-go/trace"
+	"github.com/cjburchell/tools-go/trace"
 	"github.com/pkg/errors"
 	"io"
 	"log"
