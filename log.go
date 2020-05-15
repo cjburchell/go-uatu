@@ -35,7 +35,7 @@ var (
 	FATAL = Level{Text: "Fatal", Severity: 4}
 )
 
-// Log interface
+// ILog interface
 type ILog interface {
 	Warnf(format string, v ...interface{})
 	Warn(v ...interface{})
@@ -56,7 +56,7 @@ type logger struct {
 	hostname   string
 }
 
-// Creates the logger
+// Create the logger
 func Create(settings Settings) ILog {
 	var hostname, _ = os.Hostname()
 
@@ -75,7 +75,7 @@ func Create(settings Settings) ILog {
 		}
 	}
 
-	if settings.UseHttp {
+	if settings.UseHTTP {
 		publisher := publishers.SetupHTTP(l.settings.HTTPSettings)
 		newPublishers = append(newPublishers, publisher)
 	}
@@ -236,7 +236,7 @@ func (l logger) GetWriter(level Level) io.Writer {
 	return Writer{level, l}
 }
 
-// Log Writer
+// Writer for logs
 type Writer struct {
 	Level  Level
 	logger logger

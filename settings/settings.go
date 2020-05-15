@@ -7,6 +7,7 @@ import (
 	"github.com/cjburchell/uatu-go/publishers"
 )
 
+// Get the log settings
 func Get(settings settings.ISettings) log.Settings {
 	return log.Settings{
 		ServiceName:    settings.Get("LogServiceName", ""),
@@ -14,7 +15,7 @@ func Get(settings settings.ISettings) log.Settings {
 		LogToConsole:   settings.GetBool("LogToConsole", true),
 		HTTPSettings:   createHTTPSettings(settings.GetSection("http")),
 		PubSubSettings: pubSubSettings.Get(settings.GetSection("pubSub")),
-		UseHttp:        settings.GetBool("LogUseHttp", false),
+		UseHTTP:        settings.GetBool("LogUseHttp", false),
 		UsePubSub:      settings.GetBool("LogUsePubSub", false),
 	}
 }

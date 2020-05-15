@@ -11,7 +11,7 @@ type Settings struct {
 	MinLogLevel    Level
 	LogToConsole   bool
 	UsePubSub      bool
-	UseHttp        bool
+	UseHTTP        bool
 	HTTPSettings   publishers.HTTPSettings
 	PubSubSettings pubsub.Settings
 }

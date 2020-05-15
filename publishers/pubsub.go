@@ -15,7 +15,7 @@ func (publisher pubSubPublisher) Publish(messageBites []byte) error {
 	return publisher.connection.Publish(context.Background(), "logs", messageBites)
 }
 
-// Setup Pub Sub
+// SetupPubSub connection
 func SetupPubSub(newSettings pubsub.Settings) (Publisher, error) {
 	connection, err := pubsub.Create(context.Background(), newSettings)
 	if err != nil {

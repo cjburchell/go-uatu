@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/http"
 )
-// HTTP Settings
+
+// HTTPSettings struct
 type HTTPSettings struct {
 	Address string
 	Token   string
@@ -36,7 +37,8 @@ func (publisher httpPublisher) Publish(messageBites []byte) error {
 
 	return nil
 }
-// Setup HTTP
+
+// SetupHTTP sets up the http client
 func SetupHTTP(newSettings HTTPSettings) Publisher {
 	restClient := &http.Client{}
 	return httpPublisher{restClient: restClient, settings: newSettings}
