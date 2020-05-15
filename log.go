@@ -3,14 +3,15 @@ package log
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/cjburchell/uatu-go/publishers"
-	"github.com/cjburchell/tools-go/trace"
-	"github.com/pkg/errors"
 	"io"
 	"log"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/cjburchell/tools-go/trace"
+	"github.com/cjburchell/uatu-go/publishers"
+	"github.com/pkg/errors"
 )
 
 // Level of the log
@@ -49,63 +50,29 @@ type ILog interface {
 	GetWriter(level Level) io.Writer
 }
 
-type ISettings interface {
-	Get(key string, fallback string) string
-	GetBool(key string, fallback bool) bool
-}
-
 type logger struct {
 	publishers []publishers.Publisher
 	settings   Settings
 	hostname   string
 }
 
-var settings = Settings{
-	MinLogLevel:  DEBUG,
-	LogToConsole: true,
-}
-
-func createSettings(settings ISettings) Settings {
-	return Settings{
-		ServiceName:  settings.Get("LOG_SERVICE_NAME", ""),
-		MinLogLevel:  GetLogLevel(settings.Get("LOG_LEVEL", INFO.Text)),
-		LogToConsole: settings.GetBool("LOG_CONSOLE", true),
-	}
-}
-
-func createHTTPSettings(settings ISettings) publishers.HTTPSettings {
-	return publishers.HTTPSettings{
-		Address: settings.Get("LOG_REST_URL", "http://logger:8082/log"),
-		Token:   settings.Get("LOG_REST_TOKEN", "token"),
-	}
-}
-
-func createNatsSettings(settings ISettings) publishers.NatsSettings {
-	return publishers.NatsSettings{
-		URL:      settings.Get("LOG_NATS_URL", "tcp://nats:4222"),
-		Token:    settings.Get("LOG_NATS_TOKEN", "token"),
-		User:     settings.Get("LOG_NATS_USER", "admin"),
-		Password: settings.Get("LOG_NATS_PASSWORD", "password"),
-	}
-}
-
 // Creates the logger
-func Create(settings ISettings) ILog {
+func Create(settings Settings) ILog {
 	var hostname, _ = os.Hostname()
 
 	l := logger{
-		settings: createSettings(settings),
+		settings: settings,
 		hostname: hostname,
 	}
 
 	newPublishers := make([]publishers.Publisher, 0)
-	if settings.GetBool("LOG_USE_NATS", true) {
-		publisher := publishers.SetupNats(createNatsSettings(settings))
+	if settings.UseNats {
+		publisher := publishers.SetupNats(l.settings.NatsSettings)
 		newPublishers = append(newPublishers, publisher)
 	}
 
-	if settings.GetBool("LOG_USE_REST", false) {
-		publisher := publishers.SetupHTTP(createHTTPSettings(settings))
+	if settings.UseHttp {
+		publisher := publishers.SetupHTTP(l.settings.HTTPSettings)
 		newPublishers = append(newPublishers, publisher)
 	}
 
@@ -213,13 +180,6 @@ func (l logger) Printf(format string, v ...interface{}) {
 	l.printLog(fmt.Sprintf(format, v...), INFO)
 }
 
-// Settings for sending logs
-type Settings struct {
-	ServiceName  string
-	MinLogLevel  Level
-	LogToConsole bool
-}
-
 // Message to be sent to centralized logger
 type Message struct {
 	Text        string `json:"text"`
@@ -237,12 +197,12 @@ func (l logger) printLog(text string, level Level) {
 	message := Message{
 		Text:        text,
 		Level:       level,
-		ServiceName: settings.ServiceName,
+		ServiceName: l.settings.ServiceName,
 		Time:        time.Now().UnixNano() / 1000000,
 		Hostname:    l.hostname,
 	}
 
-	if level.Severity >= settings.MinLogLevel.Severity && settings.LogToConsole {
+	if level.Severity >= l.settings.MinLogLevel.Severity && l.settings.LogToConsole {
 		if strings.HasSuffix(message.String(), "\n") {
 			fmt.Print(message.String())
 		} else {
