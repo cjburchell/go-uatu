@@ -10,19 +10,19 @@ import (
 // Get the log settings
 func Get(settings settings.ISettings) log.Settings {
 	return log.Settings{
-		ServiceName:    settings.Get("LogServiceName", ""),
+		ServiceName:    settings.Get("ServiceName", ""),
 		MinLogLevel:    log.GetLogLevel(settings.Get("MinLogLevel", log.INFO.Text)),
 		LogToConsole:   settings.GetBool("LogToConsole", true),
-		HTTPSettings:   createHTTPSettings(settings.GetSection("http")),
-		PubSubSettings: pubSubSettings.Get(settings.GetSection("pubSub")),
-		UseHTTP:        settings.GetBool("LogUseHttp", false),
-		UsePubSub:      settings.GetBool("LogUsePubSub", false),
+		HTTPSettings:   createHTTPSettings(settings.GetSection("Http")),
+		PubSubSettings: pubSubSettings.Get(settings.GetSection("PubSub")),
+		UseHTTP:        settings.GetBool("UseHttp", false),
+		UsePubSub:      settings.GetBool("UsePubSub", false),
 	}
 }
 
 func createHTTPSettings(settings settings.ISettings) publishers.HTTPSettings {
 	return publishers.HTTPSettings{
-		Address: settings.Get("LogEndpoint", "http://logger:8082/log"),
-		Token:   settings.Get("LogToken", "token"),
+		Address: settings.Get("Endpoint", "http://logger:8082/log"),
+		Token:   settings.Get("Token", "token"),
 	}
 }
