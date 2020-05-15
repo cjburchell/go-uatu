@@ -66,9 +66,13 @@ func Create(settings Settings) ILog {
 	}
 
 	newPublishers := make([]publishers.Publisher, 0)
-	if settings.UseNats {
-		publisher := publishers.SetupNats(l.settings.NatsSettings)
-		newPublishers = append(newPublishers, publisher)
+	if settings.UsePubSub {
+		publisher, err := publishers.SetupPubSub(l.settings.PubSubSettings)
+		if err != nil {
+			log.Printf("Unable to create pub sub publisher %s", err.Error())
+		} else {
+			newPublishers = append(newPublishers, publisher)
+		}
 	}
 
 	if settings.UseHttp {
