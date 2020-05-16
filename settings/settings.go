@@ -15,8 +15,8 @@ func Get(settings settings.ISettings) log.Settings {
 		LogToConsole:   settings.GetBool("LogToConsole", true),
 		HTTPSettings:   createHTTPSettings(settings.GetSection("Http")),
 		PubSubSettings: pubSubSettings.Get(settings.GetSection("PubSub")),
-		UseHTTP:        settings.GetBool("UseHttp", false),
-		UsePubSub:      settings.GetBool("UsePubSub", false),
+		UseHTTP:        settings.GetSection("Http").GetBool("Enabled", false),
+		UsePubSub:      settings.GetSection("PubSub").GetBool("Enabled", false),
 	}
 }
 
