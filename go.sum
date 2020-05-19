@@ -36,10 +36,10 @@ github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
-github.com/cjburchell/pubsub v1.2.18 h1:DxHefYgjsoCyvDe8G723O+i5/qGYM13IXi2de/T7WOw=
-github.com/cjburchell/pubsub v1.2.18/go.mod h1:gHeuWAD+qBBe4QRfrL9AoTckdMJESEfo/YxIe0RXuJM=
-github.com/cjburchell/settings-go v1.1.19 h1:PtuSNnFIZHPvMeO/qm3zmNiwmJqOHfNoWRai7JO56oQ=
-github.com/cjburchell/settings-go v1.1.19/go.mod h1:9o325q7tR3br/nNdeYLYFMx8McAy/TWSA9TxsIDGrAU=
+github.com/cjburchell/pubsub v1.2.19 h1:fdeob7Imv2IzjyiHwxxijyP0ReTVnjhU/AuQGsGnnmg=
+github.com/cjburchell/pubsub v1.2.19/go.mod h1:TUlNKl/HRpwng6vtmJPLSnU6h34ZKqpe6DeEwLnZhdk=
+github.com/cjburchell/settings-go v1.1.20 h1:xycBtmTzYfnR4SUABSrnQi8znEO3dYJBCPbHVIuT87A=
+github.com/cjburchell/settings-go v1.1.20/go.mod h1:9o325q7tR3br/nNdeYLYFMx8McAy/TWSA9TxsIDGrAU=
 github.com/cjburchell/tools-go v1.0.10 h1:mJqk5L4RfSSvjHQBraoJPx07magzwge6RKV3f8lhrOE=
 github.com/cjburchell/tools-go v1.0.10/go.mod h1:jDc6wyeVOBbPhx7Wx9H8GBjIR2XIF8BaYl6Ehx17hQ8=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
